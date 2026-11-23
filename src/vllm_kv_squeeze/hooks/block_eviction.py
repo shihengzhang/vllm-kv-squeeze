@@ -23,6 +23,7 @@ class BlockEvictionPlan:
 
     kept_block_ids: torch.Tensor  # [K] physical block ids, in logical order
     freed_block_ids: torch.Tensor  # [F] physical block ids to return to the pool
+    evicted_block_indices: torch.Tensor  # [F] logical positions in the block table
 
     @property
     def kept_blocks(self) -> int:
@@ -83,7 +84,9 @@ def plan_block_eviction(
         end = min(start + block_size, seq_len)
         keep_mask[b] = bool(token_kept[start:end].any())
 
+    evicted_indices = torch.arange(num_logical, dtype=torch.int64)[~keep_mask]
     return BlockEvictionPlan(
         kept_block_ids=block_ids[keep_mask],
         freed_block_ids=block_ids[~keep_mask],
+        evicted_block_indices=evicted_indices,
     )

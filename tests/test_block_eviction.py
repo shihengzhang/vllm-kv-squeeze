@@ -19,6 +19,7 @@ def test_frees_only_fully_evicted_blocks():
 
     assert torch.equal(plan.kept_block_ids, torch.tensor([10, 12]))
     assert torch.equal(plan.freed_block_ids, torch.tensor([11, 13, 14]))
+    assert torch.equal(plan.evicted_block_indices, torch.tensor([1, 3, 4]))
     assert plan.kept_blocks == 2
     assert plan.freed_blocks == 3
 

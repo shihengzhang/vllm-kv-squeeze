@@ -4,6 +4,7 @@ from .hooks import (
     BlockEvictionPlan,
     EvictionHook,
     build_attention_bias,
+    free_evicted_blocks,
     plan_block_eviction,
 )
 from .policy import (
@@ -27,6 +28,7 @@ __all__ = [
     "SnapKVPolicy",
     "StreamingLLMPolicy",
     "build_attention_bias",
+    "free_evicted_blocks",
     "make_result",
     "plan_block_eviction",
     "resolve_budget",
