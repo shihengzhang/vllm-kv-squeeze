@@ -1,18 +1,21 @@
 """vLLM V1 integration points.
 
-The policy layer above is self-contained (pure PyTorch) and fully testable.
-Wiring it into vLLM requires touching version-specific internals, so this module
-is a *scaffold*: it documents exactly where to hook and ships helper functions
-that are pure and testable, while the parts that call into vLLM are marked
-``# TODO(verify)`` and must be checked against your installed vLLM version
-(vLLM 0.8+ uses the "V1" engine; paths below follow V1).
+The policy layer (``vllm_kv_squeeze.policy``) and the block planner
+(``vllm_kv_squeeze.hooks.block_eviction``) are self-contained and fully
+testable. Wiring them into vLLM requires touching version-specific internals,
+so this module documents exactly where to hook. The parts that call into vLLM
+are marked ``# TODO(verify)`` and must be checked against your installed vLLM
+version (vLLM 0.8+ uses the "V1" engine; paths below follow V1).
 """
 
 from __future__ import annotations
 
+from typing import Optional
+
 import torch
 
 from ..policy import EvictionPolicy, EvictionResult
+from .block_eviction import BlockEvictionPlan, plan_block_eviction
 
 
 def build_attention_bias(
@@ -42,9 +45,9 @@ class EvictionHook:
     1. During prefill, capture per-token attention scores (cumulative softmax
        attention for H2O, or last-window pooled attention for SnapKV).
     2. Run the chosen :class:`EvictionPolicy` to get an :class:`EvictionResult`.
-    3. Either (mask path) inject :func:`build_attention_bias` into decode
-       attention, or (block path) rewrite the sequence's block table and return
-       the freed blocks to the pool.
+    3. Run :meth:`plan` to decide which physical blocks to free (Level 2), and
+       optionally inject :func:`build_attention_bias` to skip the evicted tokens
+       that remain inside partially-kept blocks (Level 1).
 
     Block path (the real memory win) touches V1 internals:
 
@@ -52,36 +55,59 @@ class EvictionHook:
       exposes ``free_blocks(...)`` / ``free(...)``.
     * Each sequence's physical blocks live in ``AttentionMetadata.block_tables``
       (a list of per-sequence ``[num_blocks]`` int64 tensors).
-    * Evicting a token means removing the blocks that held it from the table and
-      returning them; paged attention already supports arbitrary block-id lists,
-      so non-contiguous keep-sets are fine.
+    * Evicting tokens means removing their blocks from the table and returning
+      them; paged attention already supports arbitrary block-id lists, so a
+      non-contiguous keep-set is fine.
 
     TODO(verify): confirm the exact method names and tensor layouts against the
     installed vLLM; they drift between releases.
     """
 
-    def __init__(self, policy: EvictionPolicy) -> None:
+    def __init__(self, policy: EvictionPolicy, block_size: int = 16) -> None:
+        if block_size <= 0:
+            raise ValueError("block_size must be > 0, got %r" % block_size)
         self.policy = policy
+        self.block_size = block_size
 
     def decide(
         self,
-        scores: torch.Tensor | None,
+        scores: Optional[torch.Tensor],
         seq_len: int,
         budget: int,
     ) -> EvictionResult:
         return self.policy(scores, seq_len, budget)
 
-    def apply_block_eviction(self, kv_cache_manager, seq_id, result: EvictionResult) -> None:
-        """Free the blocks backing evicted tokens for one sequence.
+    def plan(
+        self,
+        block_ids: torch.Tensor,
+        result: EvictionResult,
+        seq_len: Optional[int] = None,
+    ) -> BlockEvictionPlan:
+        """Compute the pure block-level free/keep plan (see module above)."""
+        return plan_block_eviction(result, self.block_size, block_ids, seq_len)
 
-        Scaffold only — see the module docstring. Do not run without verifying
-        the vLLM API against your installed version.
+    def apply_block_eviction(
+        self,
+        kv_cache_manager,
+        block_ids: torch.Tensor,
+        result: EvictionResult,
+        seq_len: Optional[int] = None,
+    ) -> BlockEvictionPlan:
+        """Plan and (when wired) apply block frees for one sequence.
+
+        The planning is pure and always runs; the vLLM mutation below is a
+        scaffold — do not call it without verifying the API against your
+        installed vLLM.
         """
-        # TODO(verify): map token indices -> block ids via the block size and the
-        # sequence's block table, then call, e.g.:
-        #   kv_cache_manager.free_blocks(evicted_block_ids)
+        plan = self.plan(block_ids, result, seq_len)
+
+        # TODO(verify) against installed vLLM V1:
+        #   1. rewrite this sequence's block table to ``plan.kept_block_ids``
+        #      (update AttentionMetadata.block_tables and slot_mapping/seq_lens);
+        #   2. return the freed blocks:
+        #        kv_cache_manager.free_blocks(plan.freed_block_ids)
         raise NotImplementedError(
-            "Block-level eviction is not wired up yet: verify the vLLM V1 "
-            "KVCacheManager API against your installed version, then map "
-            "evicted token indices to block ids and free them."
+            "Block-level eviction is planned but not yet applied: verify the "
+            "vLLM V1 KVCacheManager API against your installed version, then "
+            "rewrite the block table and call free_blocks(plan.freed_block_ids)."
         )

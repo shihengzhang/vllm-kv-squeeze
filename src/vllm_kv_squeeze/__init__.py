@@ -1,6 +1,11 @@
 """vllm-kv-squeeze: pluggable KV-cache eviction for vLLM."""
 
-from .hooks import EvictionHook, build_attention_bias
+from .hooks import (
+    BlockEvictionPlan,
+    EvictionHook,
+    build_attention_bias,
+    plan_block_eviction,
+)
 from .policy import (
     EvictionPolicy,
     EvictionResult,
@@ -14,6 +19,7 @@ from .utils import resolve_budget
 __version__ = "0.1.0"
 
 __all__ = [
+    "BlockEvictionPlan",
     "EvictionHook",
     "EvictionPolicy",
     "EvictionResult",
@@ -22,5 +28,6 @@ __all__ = [
     "StreamingLLMPolicy",
     "build_attention_bias",
     "make_result",
+    "plan_block_eviction",
     "resolve_budget",
 ]

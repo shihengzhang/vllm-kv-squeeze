@@ -55,19 +55,21 @@ src/vllm_kv_squeeze/
 │   ├── snapkv.py
 │   └── streaming_llm.py
 ├── hooks/
-│   └── v1.py        # vLLM V1 integration scaffold + attention-bias helper
+│   ├── v1.py            # vLLM V1 integration scaffold + attention-bias helper
+│   └── block_eviction.py  # pure planner: token keep/evict -> block free plan
 └── utils/
     └── budget.py    # ratio/absolute budget resolution
 ```
 
 Two integration levels are planned (see `hooks/v1.py`):
 
-1. **Mask path (Level 1)** — block attention to evicted tokens. Saves FLOPs and latency; the KV stays resident.
-2. **Block-eviction path (Level 2)** — rewrite the sequence's block table and return freed blocks to the pool. This is the real memory win and the main engineering goal.
+1. **Mask path (Level 1)** — block attention to evicted tokens. Saves FLOPs and latency; the KV stays resident. Implemented (`build_attention_bias`).
+2. **Block-eviction path (Level 2)** — rewrite the sequence's block table and return freed blocks to the pool. This is the real memory win. The *planning* logic is implemented (`plan_block_eviction`, fully tested); the vLLM mutation itself is a documented scaffold.
 
 ## Roadmap
 
 - [x] Policy layer: StreamingLLM, H2O, SnapKV + budget helpers
+- [x] Pure block-eviction planner (token keep/evict → block free plan)
 - [ ] vLLM V1 block-eviction wiring (verify against installed vLLM API)
 - [ ] Perplexity / output-quality regression tests vs. no-eviction baseline
 - [ ] End-to-end throughput / memory benchmarks
