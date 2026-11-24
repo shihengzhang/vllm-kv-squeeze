@@ -2,6 +2,12 @@
 
 > Pluggable KV-cache eviction for [vLLM](https://github.com/vllm-project/vllm). Drop the tokens the model no longer needs, and turn the freed memory into longer context or larger batches.
 
+[![CI](https://github.com/shihengzhang/vllm-kv-squeeze/actions/workflows/ci.yml/badge.svg)](https://github.com/shihengzhang/vllm-kv-squeeze/actions)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+
+**English** · [中文](README.zh-CN.md)
+
 The KV cache is the single biggest memory cost of long-context LLM serving, and most of it is wasted: a handful of "attention sink" and recent tokens carry the useful signal, while the middle is largely forgettable. `vllm-kv-squeeze` packages several eviction strategies as a small, pure, well-tested policy layer, and documents exactly how to wire them into vLLM's paged KV cache.
 
 ## Why this exists
@@ -20,8 +26,11 @@ Ran end-to-end on an **a GPU** with **Qwen2.5-7B-Instruct**
 | **Speed** | decode 31.1 → 41.6 tok/s (**1.34×**) at 8K → 4K effective context |
 | **Quality** | perplexity 3.157 → 3.139 (**0.994×**, ~no loss) at 50% H2O eviction |
 
+![KV eviction on 7B](kv_eviction_scaled.png)
+
 Reproduce with the scripts in [`examples/`](examples/): `demo_eviction.py` (small model, full pipeline),
-`demo_scaled.py` (7B memory + speed), `demo_quality.py` (7B perplexity, real attention).
+`demo_scaled.py` (7B memory + speed), `demo_quality.py` (7B perplexity),
+`demo_blockkv.py` (BlockKV vs H2O frontier), `live_eviction.py` (single-pass live integration).
 
 ### The key finding: token-level eviction ≠ block-level freeing
 
