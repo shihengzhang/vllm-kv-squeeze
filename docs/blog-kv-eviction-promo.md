@@ -1,6 +1,6 @@
 # 你淘汰了 50% 的 KV，但显存几乎没省——PagedAttention 的块级陷阱
 
-> 一个在 four GPUs 上真机跑出来的反直觉结论，和一个叫 BlockKV 的解法。项目已开源：[vllm-kv-squeeze](https://github.com/shihengzhang/vllm-kv-squeeze)。
+> 一个在多卡 GPU 上真机跑出来的反直觉结论，和一个叫 BlockKV 的解法。项目已开源：[vllm-kv-squeeze](https://github.com/shihengzhang/vllm-kv-squeeze)。
 
 ## 先说结论
 

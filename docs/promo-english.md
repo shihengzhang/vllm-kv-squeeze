@@ -56,7 +56,7 @@ Why: PagedAttention frees whole 16-token blocks, not tokens. H2O keeps scattered
 Our fix, **BlockKV**: keep whole blocks + rescue a few exceptional tokens.
 → 3× more blocks freed at the same budget, perplexity basically unchanged.
 
-Measured on GPU (Qwen2.5-7B, real vLLM engine):
+Measured on a GPU (Qwen2.5-7B, real vLLM engine):
 H2O: 0 blocks freed
 BlockKV: 12 blocks freed
 

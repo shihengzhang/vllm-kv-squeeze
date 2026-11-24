@@ -17,7 +17,7 @@ The KV cache is the single biggest memory cost of long-context LLM serving, and 
 
 ## Verified on real hardware
 
-Ran end-to-end on an **a GPU** with **Qwen2.5-7B-Instruct**
+Ran end-to-end on a **GPU** with **Qwen2.5-7B-Instruct**
 (vLLM 0.19.0 + torch 2.10.0+cu128, CUDA 12.8):
 
 | Axis | Result |
@@ -130,7 +130,7 @@ Two integration levels are planned (see `hooks/v1.py`):
 - [x] Policy layer: StreamingLLM, H2O, SnapKV + budget helpers
 - [x] Pure block-eviction planner (token keep/evict → block free plan)
 - [x] vLLM 0.34.0 block-free wiring (`free_evicted_blocks`, written against source)
-- [x] End-to-end GPU run: memory / speed / perplexity benchmarks (GPU, see above)
+- [x] End-to-end GPU run: memory / speed / perplexity benchmarks (a GPU, see above)
 - [x] Live in-process integration: `free_evicted_blocks` inside a running vLLM engine ([`docs/integration.md`](docs/integration.md))
 - [x] Single-pass score capture: hook the last decoder layer during prefill, recompute one layer's `Q@K^T` (~4% overhead, no second forward)
 - [ ] Version CI tracking the latest vLLM release
