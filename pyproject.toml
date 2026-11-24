@@ -9,7 +9,7 @@ description = "Pluggable KV-cache eviction policies for vLLM: drop tokens the mo
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
-authors = [{ name = "Your Name", email = "you@example.com" }]
+authors = [{ name = "zsh", email = "zhangshiheng33@163.com" }]
 keywords = ["llm", "inference", "vllm", "kv-cache", "eviction", "attention", "serving"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -33,9 +33,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourname/vllm-kv-squeeze"
-Repository = "https://github.com/yourname/vllm-kv-squeeze"
-Issues = "https://github.com/yourname/vllm-kv-squeeze/issues"
+Homepage = "https://github.com/shihengzhang/vllm-kv-squeeze"
+Repository = "https://github.com/shihengzhang/vllm-kv-squeeze"
+Issues = "https://github.com/shihengzhang/vllm-kv-squeeze/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/vllm_kv_squeeze"]

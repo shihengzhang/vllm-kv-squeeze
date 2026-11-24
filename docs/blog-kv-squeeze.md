@@ -4,7 +4,7 @@
 
 自回归生成有一个众所周知的矛盾：**预填充是算力密集，解码是访存密集**。每生成一个 token，模型都要把整段历史的 Key/Value 从显存里读出来、重算一遍注意力。当上下文到 32K、128K 甚至 1M 时，KV Cache 的显存占用和带宽压力会先于算力把你卡死。
 
-我们做了一个叫 [vllm-kv-squeeze](https://github.com/yourname/vllm-kv-squeeze) 的小项目：把几种"KV 淘汰"策略做成干净、可插拔的库，目标是在不重训模型的前提下，把长上下文的显存和延迟压下来。这篇文章讲清楚三件事：**为什么能省、为什么难做、我们怎么设计的**。
+我们做了一个叫 [vllm-kv-squeeze](https://github.com/shihengzhang/vllm-kv-squeeze) 的小项目：把几种"KV 淘汰"策略做成干净、可插拔的库，目标是在不重训模型的前提下，把长上下文的显存和延迟压下来。这篇文章讲清楚三件事：**为什么能省、为什么难做、我们怎么设计的**。
 
 ## 一、反直觉的发现：注意力大部分是浪费的
 
@@ -105,7 +105,7 @@ print(plan.freed_block_ids)  # 归还给 KVCacheManager 的块
 
 ## 五、如果你也关心这件事
 
-- 仓库：[vllm-kv-squeeze](https://github.com/yourname/vllm-kv-squeeze)（Apache-2.0）
+- 仓库：[vllm-kv-squeeze](https://github.com/shihengzhang/vllm-kv-squeeze)（Apache-2.0）
 - 想一起做 Level 2 接线、补 benchmark、或者加新策略（比如 DMC、Quest），欢迎提 issue 或 PR。
 
 > 推理加速的下半场，拼的不是再多叠一个 kernel，而是**搞清楚哪些计算根本不该做**。KV 淘汰是这个问题里最干净、也最被低估的一个切口。
