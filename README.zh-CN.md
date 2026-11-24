@@ -26,7 +26,7 @@ KV 缓存是长上下文 LLM 推理最大的显存开销，而其中大部分是
 | **速度** | decode 31.1 → 41.6 tok/s（**1.34×**）@ 8K → 4K 有效上下文 |
 | **质量** | perplexity 3.157 → 3.139（**0.994×**，几乎无损）@ 50% H2O 淘汰 |
 
-![7B KV 淘汰可视化](kv_eviction_scaled.png)
+![BlockKV vs H2O — 内存 vs 质量](kv_eviction_frontier.png)
 
 用 [`examples/`](examples/) 里的脚本复现：`demo_eviction.py`（小模型完整链路）、
 `demo_scaled.py`（7B 内存+速度）、`demo_quality.py`（7B perplexity）、

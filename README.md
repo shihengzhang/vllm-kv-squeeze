@@ -26,7 +26,7 @@ Ran end-to-end on an **a GPU** with **Qwen2.5-7B-Instruct**
 | **Speed** | decode 31.1 → 41.6 tok/s (**1.34×**) at 8K → 4K effective context |
 | **Quality** | perplexity 3.157 → 3.139 (**0.994×**, ~no loss) at 50% H2O eviction |
 
-![KV eviction on 7B](kv_eviction_scaled.png)
+![BlockKV vs H2O — memory vs quality](kv_eviction_frontier.png)
 
 Reproduce with the scripts in [`examples/`](examples/): `demo_eviction.py` (small model, full pipeline),
 `demo_scaled.py` (7B memory + speed), `demo_quality.py` (7B perplexity),
