@@ -26,7 +26,11 @@ Ran end-to-end on an **a GPU** with **Qwen2.5-7B-Instruct**
 | **Speed** | decode 31.1 → 41.6 tok/s (**1.34×**) at 8K → 4K effective context |
 | **Quality** | perplexity 3.157 → 3.139 (**0.994×**, ~no loss) at 50% H2O eviction |
 
-![BlockKV vs H2O — memory vs quality](kv_eviction_frontier.png)
+![BlockKV vs H2O — memory vs quality](hero_frontier.png)
+
+![KV cache grows linearly — eviction halves it](kv_memory_scaling.png)
+
+![1.34× faster decode after eviction](decode_speed.png)
 
 Reproduce with the scripts in [`examples/`](examples/): `demo_eviction.py` (small model, full pipeline),
 `demo_scaled.py` (7B memory + speed), `demo_quality.py` (7B perplexity),
@@ -50,6 +54,8 @@ This is the concrete meaning of the two integration levels:
 
 For a fixed 50% *token* budget, H2O/SnapKV buy you quality + speed, while the *memory*
 win scales with how contiguous your keep-set is.
+
+![Why token-level eviction ≠ block-level freeing](block_schematic.png)
 
 ### CUDA-version notes (from the real run)
 

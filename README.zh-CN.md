@@ -26,7 +26,11 @@ KV 缓存是长上下文 LLM 推理最大的显存开销，而其中大部分是
 | **速度** | decode 31.1 → 41.6 tok/s（**1.34×**）@ 8K → 4K 有效上下文 |
 | **质量** | perplexity 3.157 → 3.139（**0.994×**，几乎无损）@ 50% H2O 淘汰 |
 
-![BlockKV vs H2O — 内存 vs 质量](kv_eviction_frontier.png)
+![BlockKV vs H2O — 内存 vs 质量](hero_frontier.png)
+
+![KV 缓存随上下文线性增长，淘汰减半](kv_memory_scaling.png)
+
+![淘汰后 decode 提速 1.34×](decode_speed.png)
 
 用 [`examples/`](examples/) 里的脚本复现：`demo_eviction.py`（小模型完整链路）、
 `demo_scaled.py`（7B 内存+速度）、`demo_quality.py`（7B perplexity）、
@@ -45,6 +49,8 @@ PagedAttention 按 *块*（默认 16 个 token）释放内存，而不是按 tok
 2. **Level 2 — 释放**整块被淘汰的块 → 才是真正的省内存。
 
 在固定 50% *token* 预算下，H2O/SnapKV 换来的是质量+速度，而**内存**收益取决于保留集的连续程度。
+
+![为什么 token 级淘汰 ≠ 块级释放](block_schematic.png)
 
 ### CUDA 版本注意（来自实测）
 
