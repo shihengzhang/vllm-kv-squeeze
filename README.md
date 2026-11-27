@@ -15,6 +15,19 @@ The KV cache is the single biggest memory cost of long-context LLM serving, and 
 - **vLLM has no native KV eviction API.** PagedAttention stores KV in *blocks*, not tokens, so you cannot simply zero out a token's cache — you have to drop whole blocks from the sequence's block table and return them to the pool.
 - **Existing methods are scattered in forks** (SnapKV-vLLM, PyramidKV-vLLM, …) that drift from upstream. This repo aims to be a clean, version-tracked policy layer plus a clearly documented integration path.
 
+## New: prefix-cache-aware eviction (`RefCntAwarePolicy`)
+
+Under vLLM **prefix caching**, a physical KV block can be shared by multiple concurrent requests (`ref_cnt > 1`), and the block pool only reclaims a block when its `ref_cnt` reaches zero. Existing eviction methods score blocks from a single-request view and ignore this — so **evicting a shared block frees no memory** (yet still degrades quality).
+
+`RefCntAwarePolicy` fixes it: it evicts freeable blocks (`ref_cnt == 1`) before shared blocks, keeping eviction efficiency (`freed / evicted`) at ~100% instead of collapsing to the unique-block fraction. Measured on real vLLM with 8 concurrent requests sharing a prompt:
+
+| policy | evictions | freed | efficiency |
+|---|---|---|---|
+| blind (single-request) | 64 | 0 | **0%** |
+| ref_cnt-aware | 16 | 16 | 100% |
+
+See the [paper draft](docs/paper-refcnt-eviction.md), the [finding write-up](docs/finding-prefix-eviction.md), and the `examples/prefix_eviction_*.py` scripts (analysis, live vLLM, quality, workload, throughput, LongBench).
+
 ## Verified on real hardware
 
 Ran end-to-end on a **GPU** with **Qwen2.5-7B-Instruct**
